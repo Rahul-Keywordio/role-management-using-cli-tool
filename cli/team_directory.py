@@ -106,6 +106,10 @@ def list_members(role,team):
         for i in filtered:
             table_data.append([i["name"], i["email"], i["role"], i["team"]])
         click.echo(tabulate(table_data,headers=["Name", "Email", "Role", "Team"]))
+    
+    
+
+
 
 @cli.command('assign-task')
 def assign_task():
