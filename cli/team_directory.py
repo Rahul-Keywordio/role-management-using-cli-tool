@@ -1,5 +1,5 @@
 
-"""First way with Cli framework Click"""
+"""First way with Cli library Click"""
 
 ##################################################################################################
 
@@ -63,7 +63,7 @@ def list_teams():
         for team in teams:
             temp = []
             temp.append([team["name"]])
-            click.echo(temp)
+            click.echo(tabulate(temp,headers=["Team name"]))
 
 @cli.command('add-member')
 @click.option('--name')
@@ -92,9 +92,9 @@ def list_members(role,team):
    
     filtered = []
     if team:
-        for t in group_members:
-            if t["team"] == team:
-                filtered.append(t)
+        for tm in group_members:
+            if tm["team"] == team:
+                filtered.append(tm)
     elif role:
         for t in group_members:
             if t["role"] == role:
@@ -103,8 +103,8 @@ def list_members(role,team):
         click.echo("No matching members found")
     else:
         table_data = []
-        for i in filtered:
-            table_data.append([i["name"], i["email"], i["role"], i["team"]])
+        for person in filtered:
+            table_data.append([person["name"], person["email"], person["role"], person["team"]])
         click.echo(tabulate(table_data,headers=["Name", "Email", "Role", "Team"]))
     
     
