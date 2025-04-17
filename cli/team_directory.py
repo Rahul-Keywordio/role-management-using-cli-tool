@@ -5,36 +5,53 @@
 
 import click
 from tabulate import tabulate
+import json
 
 
 # teams = {}
 # group_members = []
-teams = [{
-    "name": "developer-frontend",
-    "description": "handles UI",
-    "members": []
+# teams = [{
+#     "name": "developer-frontend",
+#     "description": "handles UI",
+#     "members": []
 
-}]
+# }]
 
-group_members = [{
-    "name": 'rahul',
-    "email": "rahul@keywordio.com",
-    "role": "intern",
-    "team": "developer-frontend"
-},
-{
-    "name": 'shubham',
-    "email": "shubham@keywordio.com",
-    "role": "intern",
-    "team": "developer-backend"
+# group_members = [{
+#     "name": 'rahul',
+#     "email": "rahul@keywordio.com",
+#     "role": "intern",
+#     "team": "developer-frontend"
+# },
+# {
+#     "name": 'shubham',
+#     "email": "shubham@keywordio.com",
+#     "role": "intern",
+#     "team": "Backend"
 
-},
-{
-    "name": 'karan',
-    "email": "karan@keywordio.com",
-    "role": "developer",
-    "team": "senior-team"
-}]
+# },
+# {
+#     "name": 'karan',
+#     "email": "karan@keywordio.com",
+#     "role": "developer",
+#     "team": "senior-team"
+# }]
+Team_file = "Teams.json"
+group_members_file = "Group_members.json"
+try:
+    with open(Team_file,'r') as f:
+       teams=json.load(f)
+except FileNotFoundError:
+    teams = []
+
+try:
+    with open(group_members_file,"r") as f:
+        group_members = json.load(f)
+except FileNotFoundError:
+    group_members = []
+
+
+
 
 @click.group()
 def cli():
@@ -51,6 +68,8 @@ def add_team(name,description):
         "members": [],
     }
     teams.append(team)
+    with open(Team_file, 'w') as f:
+        json.dump(teams,f)
     click.echo(f'Team name {name} successfully added!')
   
 
@@ -60,10 +79,13 @@ def list_teams():
     if not teams:
         click.echo("No teams")
     else:
-        for team in teams:
-            temp = []
-            temp.append([team["name"]])
-            click.echo(temp)
+        # for team in teams:
+        #     temp = []
+        #     temp.append([team["name"]])
+        #     click.echo(temp)
+        table_data = [[team['name'],team['description']] for team in teams]
+        click.echo(tabulate(table_data, headers=['Team Name','Description']))
+
 
 @cli.command('add-member')
 @click.option('--name')
@@ -78,33 +100,59 @@ def add_members(name,email,role,team):
               "team":team,
               }
     group_members.append(member)
+
     for team in teams:
         if team["name"] == team:
             team["members"].append(member)
-    click.echo(f'Member {name} is added to the team {team}')
+
+        with open(group_members_file,'w') as f:
+                json.dump(group_members,f)
+            
+        with open(Team_file, 'w') as f:
+                json.dump(teams,f)
+
+        click.echo(f'Member {name} is added to the team {team}')
      
 
 
 @cli.command('list-members')
 @click.option('--role',help='filter member by role')
 @click.option('--team',help='filter member by team')
-def list_members(role,team):
+@click.option('--name',help='filter member by Name')
+@click.option('--email',help='filter member by Email')
+def list_members(role, team, name, email):
+
    
-    filtered = []
+    # filtered = []
+    # if team:
+    #     for t in group_members:
+    #         if t["team"] == team:
+    #             filtered.append(t)
+    # elif role:
+    #     for t in group_members:
+    #         if t["role"] == role:
+    #             filtered.append(t)
+    # elif name:
+    #     for t in group_members:
+    #         if t["name"] == name:
+    #             filtered.append(t)
+    filtered = group_members
     if team:
-        for t in group_members:
-            if t["team"] == team:
-                filtered.append(t)
+        filtered = [member for member in filtered if member["team"] == team]
     elif role:
-        for t in group_members:
-            if t["role"] == role:
-                filtered.append(t)
+        filtered = [member for member in filtered if member["role"] == role]
+    elif name:
+        filtered = [member for member in filtered if member["name"] == name]
+    elif email:
+        filtered = [member for member in filtered if member["email"]== email]
+    
     if not filtered:
         click.echo("No matching members found")
     else:
-        table_data = []
-        for i in filtered:
-            table_data.append([i["name"], i["email"], i["role"], i["team"]])
+        # table_data = []
+        # for i in filtered:
+        #     table_data.append([i["name"], i["email"], i["role"], i["team"]])
+        table_data = [[person['name'],person['email'],person['role'],person['team']] for person in filtered]
         click.echo(tabulate(table_data,headers=["Name", "Email", "Role", "Team"]))
 
 @cli.command('assign-task')
