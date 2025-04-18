@@ -60,27 +60,42 @@ async def fetch_quote(session):
         url = "https://api.quotable.io/random"
         async with session.get(url, timeout = 5,ssl=False) as response:
             info = await response.json()
-            print(info)
+        
             return info.get("content", "no quote Found")
         
     return await retry_calls(get_info)
 
 
-async def fetch_info_for_single(email):
+async def fetch_info_for_single(email,session):
     logging.info(f"fetching data for: {email}")
-    async with aiohttp.ClientSession() as session:
+    # async with aiohttp.ClientSession() as session:
 
-        try:
+    try:
             timezone = await fetch_timezone(session)
             weather = await fetch_weather(session)
             quote = await fetch_quote(session)
-            print(quote)
+
             logging.info(f"timezone is: {timezone} for email: {email}\n")
             logging.info(f"weather is: {weather} for email: {email}\n")
-            logging.info(f"quote is: {quote} for emial: {email}")
-        except Exception as e:
+            logging.info(f"quote is: {quote} for email: {email}")
+    except Exception as e:
             logging.error(f"Error for fetch info for {email}: {e}")
 
+
+
+"""function to fetch for multiple teammates"""
+
+async def fetch_for_multiple(emails):
+    logging.info(f"fetching info for{emails}")
+
+    # make all request for all teammates in parallel
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for email in emails:
+            task = fetch_info_for_single(email,session)
+            tasks.append(task)
+
+        await asyncio.gather(*tasks)      # wait for all tasks to complete
 
 
 
@@ -94,9 +109,9 @@ def cli():
 
 
 @cli.command()
-@click.option('--email','--e', required = True, help="teammmate mail")
-def fetch(email):
-    asyncio.run(fetch_info_for_single(email))
+@click.option('--emails','--e', multiple = True, required = True, help="teammmate mail")
+def fetch(emails):
+    asyncio.run(fetch_for_multiple(emails))
 
 
         
